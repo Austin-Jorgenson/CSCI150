@@ -140,27 +140,27 @@ def print_shop_menu(item1name, item1price, item2name, item2price):
 
 
 
-if __name__ == "__main__":
+def test_functions():
     #calling function "purchase_item" 3 times
     num_purchased, leftover_money = purchase_item(123, 1000, 3)
     num_purchased1, leftover_money1 = purchase_item(123, 201, 3)
     num_purchased2, leftover_money2 = purchase_item(341, 2112)
-    
+
     #printing the functions
-    #correct number of items and correct change
-    print(num_purchased)
+    # #correct number of items and correct change
+    # print(num_purchased)
     print(leftover_money)
     print()
     #attempting to purchase more items is properly limited
     print(num_purchased1)
     print(leftover_money1)
     print()
-    
+
     #The default value of quantityToPurchase works
     print(num_purchased2)
     print(leftover_money2)
     print()
-    
+
     #calling function "new_random_monster" 3 times
     my_monster1 = new_random_monster()
     my_monster2 = new_random_monster()
@@ -170,12 +170,12 @@ if __name__ == "__main__":
     print(my_monster1['name'])
     print(my_monster1['description'])
     print()
-    
+
     print(my_monster2['name'])
     print(my_monster2['description'])
     print(my_monster2['power'])
     print()
-    
+
     print(my_monster3['name'])
     print(my_monster3['health'])
     print(my_monster3['money'])
@@ -184,9 +184,12 @@ if __name__ == "__main__":
     print_welcome("Austin", 20)
     print_welcome("Jeff", 20)
     print_welcome("Kimberly", 20)
-    
-    
+
+
     #calling my function "print_shop_menu"
     print_shop_menu("Apple", 31, "Pear", 1.234)
     print_shop_menu("Trash Bags", 73, "Controller", 157.809)
     print_shop_menu("Addy Scim", 1561, "Lobbies", 99)
+
+if __name__ == "__main__":
+    test_functions()
