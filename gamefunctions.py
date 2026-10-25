@@ -122,10 +122,7 @@ def print_shop_menu(item1name, item1price, item2name, item2price):
     
     Example:
         >>>print_shop_menu("Apple", 31, "Pear", 1.234)
-        >>>/----------------------\
-           | Apple         $31.00 |
-           | Pear           $1.23 |
-           \----------------------/
+        
     """
 
     #adding a '$' in front of the price
