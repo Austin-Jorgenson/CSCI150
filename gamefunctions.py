@@ -36,7 +36,7 @@ def purchase_item(itemPrice, startingMoney, quantityToPurchase=1):
 
     
     numOfItemsPurchaseable = startingMoney // itemPrice
-    if 0 < quantityToPurchase < numOfItemsPurchaseable:
+    if 0 < quantityToPurchase <= numOfItemsPurchaseable:
         theCost = quantityToPurchase * itemPrice
     elif 0 < numOfItemsPurchaseable < quantityToPurchase:
         theCost = numOfItemsPurchaseable * itemPrice
