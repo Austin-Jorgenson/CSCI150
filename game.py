@@ -1,6 +1,8 @@
 import gamefunctions
 import random
 import copy
+import json
+
 
 characterDamage = 8
 
@@ -11,6 +13,8 @@ state = {
         
     ]
 }
+
+saveFile = "savegame.json"
 
 def print_menu():
     """
@@ -26,6 +30,8 @@ def print_menu():
 2. Sleep (Restore HP for 50 gold)
 3. View inventory
 4. Shop
+5. Save and Quit
+6. Load Game
 q. Quit
     """)
 
@@ -214,6 +220,14 @@ def shop():
         print("You have no gold to spend, stop loitering.")
 
 def consumableItem(gameState, monster):
+    """
+    Allows a player to use a consumable item in game
+
+    Parameters - None
+
+    Returns - None
+
+    """
     for i, item in enumerate(state['characterInventory']):
         if(item['type'] == 'consumable'):
             print(i, item)
@@ -224,8 +238,40 @@ def consumableItem(gameState, monster):
             monster['health'] -= 5000
         state['characterInventory'].pop(i)
 
+def saveGame():
+    """
+    Allows a player to save their game state
+
+    Parameters - None
+
+    Returns - None
+
+    """
+    with open(saveFile, "w") as file:
+        json.dump(state, file)
+    print("Game save successfully.\n")
+
+def loadGame():
+    """Load a players game
+
+    Parameters - None
+
+    Returns - None
+
+    """
+    global state
+    try:
+        with open(saveFile, "r") as file:
+            state = json.load(file)
+        print("Game loaded successfully.\n")
+    except FileNotFoundError:
+        print("No save file found. Starting a new game.\n")
     
 if __name__ == "__main__":
+        startChoice = input("Please Select an Option\n1. New Game\n2. Load Game\n")
+        if startChoice == "2":
+            loadGame()
+        
         while True:
             print(f"You are in New Bark Town.\nCurrent HP: {state['characterHealth']} Current Gold: {state['characterGold']}")
             print_menu()
@@ -239,7 +285,10 @@ if __name__ == "__main__":
             elif menuChoice == "4":
                 shop()
             elif menuChoice == "5":
-                pass
+                saveGame()
+                break
+            elif menuChoice == "6":
+                loadGame()
             elif menuChoice == "q":
                 break
             else:
