@@ -2,16 +2,23 @@ import gamefunctions
 import random
 import copy
 import json
+import pygame
+import time
 
 
 characterDamage = 8
+
+
 
 state = {
     "characterHealth": 75,
     "characterGold": 500,
     "characterInventory": [
         
-    ]
+    ],
+    "characterPosition":[2,0],
+    "townLocation":[2,0],
+    "monsterPosition":[3,3]
 }
 
 saveFile = "savegame.json"
@@ -26,7 +33,7 @@ def print_menu():
     
     """
     print("""
-1. Enter tall grass
+1. Explore Jhoto
 2. Sleep (Restore HP for 50 gold)
 3. View inventory
 4. Shop
@@ -69,13 +76,16 @@ def enter_battle():
         battleChoice = input("What would you like to do?: ").strip().lower()
         if battleChoice == "1":
             currentDamage = characterDamage
-            for item in state["characterInventory"]:
+            
+            for item in state["characterInventory"]: 
                 if item.get("name") == "sword" and item.get("equipped") == "yes":
                     currentDamage += 10
-                    
                     item["usesLeft"] -= 1   #lowering uses on weapon breaking if needed
+                    
                     if item["usesLeft"] <= 0:
-                        print("Your sword broke.")
+                        print("-" * 23)
+                        print("\n---Your sword broke.---\n")
+                        print("-" * 23)
                         state["characterInventory"].remove(item)
                     break #breaks out of item check
             monster['health'] -= currentDamage
@@ -89,15 +99,19 @@ def enter_battle():
 
         else:
             print("Unrecognized command")
+   
     if state["characterHealth"] <= 0:
+        
         if state["characterGold"] < 35:
-            print(f"You whited out...\nDropped {characterGold} gold.\n")
+            print(f"You whited out...\nDropped {state['characterGold']} gold.\n")
             state["characterGold"] = 0
-            state["characterHealth"] = 75
         elif state["characterGold"] >= 35:
             print("You whited out...\nDropped 35 gold.\n")
-            state["characterGold"] -= 30
-            state["characterHealth"] = 75
+            state["characterGold"] -= 35
+        
+        state["characterHealth"] = 75
+        state["characterPosition"] = list(state["townLocation"])
+    
     elif monster['health'] <= 0:
         print(f"You have beaten {monster['name']}")
         state["characterGold"] += monster['money']
@@ -115,6 +129,7 @@ def rest():
     if state['characterHealth'] == 75:
         print("You already have full health.\n")
     elif state['characterHealth'] < 75:
+        
         if state["characterGold"] < 50:
             print("You do not have enough gold.\n")
         elif state["characterGold"] >= 50:
@@ -145,6 +160,7 @@ def viewInventory():
             for item in state["characterInventory"]:
                 if item.get("type") == "equipable":
                     equipableChoices.append(item)
+            
             if not equipableChoices:
                 print("You do not have any equipable items.\n")
                 return
@@ -186,6 +202,7 @@ def shop():
     while state['characterGold'] > 0:
         print(f"Current Gold: {state['characterGold']}")
         buyChoice = input("Please select a choice:\n1. Sword\n2. OneShot\nq. Exit Shop\n")
+        
         if buyChoice == "q":
             print("Thank you for coming in.")
             break # letting the user quit out
@@ -221,19 +238,30 @@ def shop():
 
 def consumableItem(gameState, monster):
     """
-    Allows a player to use a consumable item in game
+    Allows a player to use a consumable item in battle
 
     Parameters - None
 
     Returns - None
 
     """
+    hasConsumable = False
+    for item in state['characterInventory']:
+        if item['type'] == 'consumable':
+            hasConsumable = True
+            break
+    if not hasConsumable:
+        print("You have no consumable items\n")
+        return
+
     for i, item in enumerate(state['characterInventory']):
         if(item['type'] == 'consumable'):
             print(i, item)
     user_choice = input("Choose an item\n")
+    
     if i <= len(state['characterInventory']) and state['characterInventory'][i]:
         item = state['characterInventory'][i]
+        
         if(item['name'] == 'OneShot'):
             monster['health'] -= 5000
         state['characterInventory'].pop(i)
@@ -252,7 +280,8 @@ def saveGame():
     print("Game save successfully.\n")
 
 def loadGame():
-    """Load a players game
+    """
+    Load a players game
 
     Parameters - None
 
@@ -264,9 +293,101 @@ def loadGame():
         with open(saveFile, "r") as file:
             state = json.load(file)
         print("Game loaded successfully.\n")
+    
     except FileNotFoundError:
         print("No save file found. Starting a new game.\n")
     
+
+def displayMap():
+    """
+    Displays a map for players to move explore
+
+    Parameters - None
+
+    Returns - None
+    
+    """
+    
+    while True:
+        pygame.init()
+
+        TILE_SIZE = 32
+        SCREEN_WIDTH = 320
+        SCREEN_HEIGHT = 320
+
+        screen= pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        px, py = state["characterPosition"]
+        player = pygame.Rect(px * TILE_SIZE, py * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+
+        tx, ty = state["townLocation"]
+        townSquare = (tx * TILE_SIZE + 16, ty * TILE_SIZE + 16)
+
+        mx, my = state["monsterPosition"]
+        monsterPos = (mx * TILE_SIZE + 16, my * TILE_SIZE + 16)
+
+        running = True
+        while running:
+            screen.fill((0,0,0))
+
+            for x in range(0, SCREEN_WIDTH, TILE_SIZE):
+                pygame.draw.line(screen, (0,40,40), (x, 0), (x, SCREEN_HEIGHT))
+            for y in range(0, SCREEN_HEIGHT, TILE_SIZE):
+                pygame.draw.line(screen, (0,40,40), (0, y), (SCREEN_WIDTH, y))
+            
+            pygame.draw.circle(screen, (0, 255, 0), townSquare, 14)
+            pygame.draw.circle(screen, (255, 0, 0), monsterPos, 14)
+            pygame.draw.rect(screen, (0,140, 255), player)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    return "quit out of map"
+
+                if event.type == pygame.KEYDOWN:
+                    moved = False
+                    if event.key == pygame.K_UP and player.y > 0:
+                        player.move_ip(0, -TILE_SIZE)
+                        moved = True
+                    elif event.key == pygame.K_DOWN and player.y < SCREEN_HEIGHT - TILE_SIZE:
+                        player.move_ip(0, TILE_SIZE)
+                        moved = True
+                    elif event.key == pygame.K_LEFT and player.x > 0:
+                        player.move_ip(-TILE_SIZE, 0)
+                        moved = True
+                    elif event.key == pygame.K_RIGHT and player.x < SCREEN_WIDTH - TILE_SIZE:
+                        player.move_ip(TILE_SIZE, 0)
+                        moved = True
+
+                    if moved:
+                        state["characterPosition"] = [player.x // TILE_SIZE, player.y // TILE_SIZE]
+
+                        if state["characterPosition"] == state["townLocation"]:
+                            pygame.quit()
+                            return "town"
+                        elif state["characterPosition"] == state["monsterPosition"]:
+                            newPos = [random.randint(0, 9), random.randint(0, 9)]
+                            while newPos == state["characterPosition"] or newPos == state["townLocation"]:
+                                newPos = [random.randint(0, 9), random.randint(0, 9)]
+                            state["monsterPosition"] = newPos
+
+                            pygame.quit()
+                            enter_battle()
+                            
+                            if state["characterPosition"] == state["townLocation"]:
+                                return "town"
+                            
+                            running = False
+
+            if running:
+                pygame.display.update()
+                time.sleep(0.01)
+
+
+
+
+
 if __name__ == "__main__":
         startChoice = input("Please Select an Option\n1. New Game\n2. Load Game\n")
         if startChoice == "2":
@@ -277,7 +398,7 @@ if __name__ == "__main__":
             print_menu()
             menuChoice = input("What is your choice?: ").strip().lower()
             if menuChoice == "1":
-                enter_battle()
+                displayMap()
             elif menuChoice == "2":
                 rest()
             elif menuChoice == "3":
